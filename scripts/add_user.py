@@ -1,23 +1,28 @@
 import sys
 import os
-from optparse import OptionParser
+from argparse import ArgumentParser
+from sqlalchemy.exc import IntegrityError
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from microblog.models import User
 
-
 def add_user():
     """Add a new user to the User database."""
 
-    parser = OptionParser()
-    parser.add_option("-u", "--username", dest="username", help="username for new user")
-    parser.add_option("-p", "--password", dest="password", help="password for new user")
+    parser = ArgumentParser()
+    parser.add_argument("-u", "--username", dest="username", help="username for new user", required=True)
+    parser.add_argument("-p", "--password", dest="password", help="password for new user", required=True)
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
-    user = User.add_user(username=options.username, password=options.password)
-    print(user)
+    try:
+        user = User.add_user(username=args.username, password=args.password)
+    except IntegrityError:
+        print('[ERROR] User with username %s already exists.' % args.username)
+    except Exception as e:
+        print('[ERROR] Failed to add user %s to users table. See stack trace for details.' % args.username)
+        raise
 
     return
 
