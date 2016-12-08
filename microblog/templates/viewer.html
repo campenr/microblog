@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+
+    <div class="section-wrapper">
+        <section class="section">
+            <div class="section-header">
+                <h1 class="inline">{{ page_data['title'] }}</h1>
+                {% if page_data['private'] == true %}
+                    <i class="fa fa-lock" aria-hidden="true"></i>
+                {% endif %}
+
+                {# button for deleting page #}
+                <form class="inline" action="{{ url_for('delete_page') }}" method="post" onsubmit="return confirm('WARNING: This action cannot be undone.\n\nAre you sure you want to delete this page?');">
+                    <input type=hidden value="{{ page_data['name'] }}" name="page_name">
+                    <button type="submit" class="delete-button">
+                        <i class="fa fa-trash-o" aria-hidden="true" title="delete"></i>
+                    </button>
+                </form>
+
+            </div>
+
+            <div class="section-inner">
+                <div class="markdown-content">{{ page_data['body'] | markdown_filter }}</div>
+                <p>Created: {{ page_data['created'] }}</p>
+                <p>
+                    <a href="{{ url_for('edit_page', page_name=page_data['name']) }}">EDIT</a>
+                    <a href="{{ url_for('new_post', page_name=page_data['name']) }}">NEW POST</a>
+                </p>
+
+                {# post navigation; only if there are posts #}
+                {% if post_data is not none %}
+                    {% if post_data['post_id'] > 1 %}
+                        {# there are previous post so show nav link to them #}
+                        <span><a href="{{ url_for('view_post', page_name=page_data['name'], post_id=post_data['post_id'] - 1) }}">Older</a></span>
+                    {% else %}
+                        <span>Older</span>
+                    {% endif %}
+
+                    <span>|</span>
+
+                    {% if post_data['post_id'] < ( page_data['posts'] | length ) %}
+                        {# there are newer posts so show nav link to them #}
+                        <span><a href="{{ url_for('view_post', page_name=page_data['name'], post_id=post_data['post_id'] + 1) }}">Newer</a></span>
+                    {% else %}
+                        {# no newer links so don't render link #}
+                        <span>Newer</span>
+                    {% endif %}
+                {% endif %}
+
+            </div>
+        </section>
+    </div>
+
+    {# display post if there is one to display #}
+    {% if post_data is not none %}
+        <div class="section-wrapper">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="inline">Post: {{ post_data['created'] }}</h2>
+                    {% if post_data['private'] == true %}
+                        <i class="fa fa-lock" aria-hidden="true"></i>
+                    {% endif %}
+
+                    {# button for deleting page #}
+                    <form class="inline" action="{{ url_for('delete_post') }}" method="post" onsubmit="return confirm('WARNING: This action cannot be undone.\n\nAre you sure you want to delete this post?');">
+                        <input type=hidden value="{{ page_data['name'] }}" name="page_name">
+                        <input type=hidden value="{{ post_data['post_id'] }}" name="post_id">
+                        <button type="submit" class="delete-button">
+                            <i class="fa fa-trash-o" aria-hidden="true" title="delete"></i>
+                        </button>
+                    </form>
+
+                </div>
+
+                <div class="section-inner">
+                    <div class="markdown-content">{{ post_data['body'] | markdown_filter }}</div>
+                    <p>Edited: {{ post_data['edited'] }}</p>
+                    <p><a href="{{ url_for('edit_post', page_name=page_data['name'], post_id=post_data['post_id']) }}">EDIT</a></p>
+                </div>
+            </section>
+        </div>
+    {% endif %}
+
+{% endblock %}

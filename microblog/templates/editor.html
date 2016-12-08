@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+
+{% endblock %}
+
+
+{% block main_content %}
+
+    <section>
+        <div class="section-header">
+            {# data is none if creating a new page/post; otherwise editing a page/post #}
+            {% if data is none %}
+                {# title is none if creating a new page; otherwise creating new post #}
+                {% if title is none %}
+                    <h2>Create new page:</h2>
+                {% else %}
+                    <h2>Create a new post for:</h2>
+                    <h3>{{ title }}</h3>
+                {% endif %}
+            {% else %}
+                {# data['title'] is false (does not exist) if editing a page; otherwise editing a post #}
+                {% if data['title'] %}
+                    <h2>Edit page:</h2>
+                {% else %}
+                    <h2>Edit post for:</h2>
+                    <h3>{{ title }}</h3>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="section-inner">
+            <div class="editor-form">
+
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+
+                    {# data is none if creating a new page/post; otherwise editing a page/post #}
+                    {% if data is none %}
+                        {# title is none if creating a new page; otherwise creating new post #}
+                        {% if title is none %}
+                            <label for="title">Title: </label>
+                            {{ form.title }}
+                        {% endif %}
+                    {% else %}
+                        {# data['title'] false (does not exist) if editing a page; otherwise editing a post #}
+                        {% if data['title'] %}
+                            <label for="title">Title: </label>
+                            {{ form.title }}
+                        {% endif %}
+                    {% endif %}
+
+                    <p>
+                        {# data is none if creating a new page/post; otherwise editing a page/post #}
+                        {% if data is none %}
+                            {# new posts are private by default #}
+                            {{ form.private(checked=True) }}
+                        {% else %}
+                            {{ form.private(checked=data['private']) }}
+                        {% endif %}
+                        <label for="private">private</label>
+                    </p>
+
+                    <div class="editor-wrapper">
+                        {{ form.body(id='editor') }}
+                    </div>
+
+                    {{ form.save }}
+                </form>
+
+            </div>
+        </div>
+
+    </section>
+
+
+
+{% endblock %}

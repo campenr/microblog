@@ -1,0 +1,13 @@
+# Project dev files
+.idea
+
+# venv files
+venv/
+
+# pycache files
+__pycache__/
+
+# Ignore all files in the config folder, except the example configuration file
+# This hides super secret config files!
+config/*
+!config/example_config.py

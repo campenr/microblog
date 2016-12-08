@@ -1,0 +1,149 @@
+html {
+    font-family:sans-serif;
+}
+
+*{
+	margin: 0 auto;
+	padding: 0;
+}
+
+html, body {
+    height: 100%        /* Necessary for correct footer placement */
+}
+
+body {
+    background: #EDEDED;
+	text-align: center;
+}
+
+/* Tell the browser to render HTML 5 elements as block */
+header, nav, main, footer, section {
+    display: block;
+}
+
+.inline {
+    display: inline;
+}
+
+header {
+    height: 100px;
+}
+
+/*header*/.header-title {
+    font-family: Georgia, serif;
+    font-size: 35px;
+    font-style: italic;
+    line-height: 100px;
+}
+
+/*div*/.nav-wrapper {
+
+}
+
+/*nav*/.nav{
+    /*z-index:1;*/
+    width: 95%;
+}
+
+/*nav ul*/.nav-links {
+    list-style: none;
+}
+
+/*nav ul li*/.nav-link-item {
+    display: inline-block;
+    width: auto;
+    /*line-height:55px;*/
+}
+
+/*nav ul li a*/.nav-link {
+    font-size: 20px;
+    text-decoration: none;
+	color: black;
+	display: block;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
+
+/*nav ul li a*/.nav-link:hover {
+	text-decoration: underline;
+}
+
+nav ul li.selected a { /* TODO */
+    text-decoration: none;
+}
+
+/*div*/.main-wrapper {
+    min-height: 100%;
+}
+
+/*div*/.main-content {
+    width: 75%;
+    text-align: left;
+    overflow: auto;
+	padding-top: 35px;
+    padding-bottom: 45px;
+}
+
+/*div*/.login-button-wrapper {
+    text-align: center;
+    padding-top: 40px;
+}
+
+/*div*/.login-heading-wrapper {
+    text-align: center;
+    padding-bottom: 30px;
+}
+
+/*div*/.section-wrapper {
+    padding-bottom: 25px;
+}
+
+/*section*/.section {
+    /*padding-top: 25px;*/
+    padding: 10px 15px 10px 15px;
+    background: #F5F5F5;
+
+	/* need to fix this somehow.
+	visibility: hidden; */
+}
+
+/*section*/.section p {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+/*div*/.section-header {
+    padding-bottom: 20px;
+    font-family: Georgia, serif;
+    font-size: 20px;
+}
+
+/*div*/.section-inner {
+
+}
+
+/*div*/.markdown-content ul {
+    list-style: inside;
+    text-indent: 20px;
+}
+
+/*div*/.editor-wrapper {
+    padding-top: 20px;
+}
+
+/*footer*/.footer {
+    position: relative;
+	margin-top: -45px; /* Subtract footer and header heights */
+    height: 45px;
+	clear: both;
+    padding-bottom: 5px;
+}
+
+/*footer p*/.version {
+    font-size: 0.75em;
+    padding: 5px;
+}
+
+/*footer div*/#copyright {
+    font-size: 0.85em;
+}

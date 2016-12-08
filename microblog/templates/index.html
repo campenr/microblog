@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+    {% if pages_data is none %}
+        <p>Nothing to show!</p>
+    {% else %}
+        {% for page_data in pages_data %}
+            <div class="section-wrapper">
+                <section class="section">
+                    <div class="section-header">
+                        <h1 class="inline"><a href="{{ url_for('view_page', page_name=page_data['name']) }}">{{ page_data['title'] }}</a></h1>
+                        {% if page_data['private'] == true %}
+                            <i class="fa fa-lock" aria-hidden="true"></i>
+                        {% endif %}
+                    </div>
+
+                    <div class="section-inner">
+                        <div class="markdown-content">{{ page_data['body'] | markdown_filter }}</div>
+                        <p>Created: {{ page_data['created'] }}</p>
+                        <p><a href="{{ url_for('view_page', page_name=page_data['name']) }}">Read More!</a></p>
+                        <p>
+                            {% if current_user.is_authenticated %}
+                                <a href="{{ url_for('edit_page', page_name=page_data['name']) }}">EDIT</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </section>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}
