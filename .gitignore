@@ -7,6 +7,9 @@ venv/
 # pycache files
 __pycache__/
 
+# alembic db migration files
+migrations/
+
 # Ignore all files in the config folder, except the example configuration file
 # This hides super secret config files!
 config/*
