@@ -16,7 +16,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 WTF_CSRF_ENABLED = True
 
 # Set this to something unique
-SECRET_KEY = ""
+SECRET_KEY = os.urandom(24)
 
 # Set this to the URI to the database that you wish to use for this application
 SQLALCHEMY_DATABASE_URI = ""
