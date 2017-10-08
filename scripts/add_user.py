@@ -5,7 +5,9 @@ from sqlalchemy.exc import IntegrityError
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from microblog.models import User
+from projects import db
+from projects.models import User
+
 
 def add_user():
     """Add a new user to the User database."""
@@ -17,7 +19,9 @@ def add_user():
     args = parser.parse_args()
 
     try:
-        user = User.add_user(username=args.username, password=args.password)
+        user = User(username=args.username, password=args.password)
+        db.session.add(user)
+        db.session.commit()
     except IntegrityError:
         print('[ERROR] User with username %s already exists.' % args.username)
     except Exception as e:
