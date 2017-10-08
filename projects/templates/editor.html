@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+
+{% endblock %}
+
+{% block content %}
+
+    <div>
+        <div>
+            {# Set header text to be most informative given input #}
+            {% if new == True %}
+                {% if type_ == 'project' %}
+                    <h2>Create new Project:</h2>
+                {% elif type_ == 'post' %}
+                    <h2>Create a new Post for:</h2>
+                    <h3>{{ data.title }}</h3>
+                {% endif %}
+            {% else %}
+                {% if type_ == 'project' %}
+                    <h2>Edit Project:</h2>
+{#                    <h3>{{ data.title }}</h3>#}
+                {% elif type_ == 'post' %}
+                    <h2>Edit post for:</h2>
+                    <h3>{{ data.project.title }}</h3>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="section-inner">
+            <div class="editor-form">
+
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+
+                    <label for="title">Title: </label>
+                    {{ form.title }}
+
+                    <p>
+                        {% if new == True %}
+                            {# new projects/posts are private by default #}
+                            {{ form.private(checked=True) }}
+                        {% else %}
+                            {{ form.private(checked=data.private) }}
+                        {% endif %}
+                        <label for="private">private</label>
+                    </p>
+
+                    <div class="editor-wrapper">
+                        {{ form.body(id='editor') }}
+                    </div>
+
+                    {{ form.save(class_="btn btn-success") }}
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

@@ -14,7 +14,7 @@ from flask_migrate import Migrate, MigrateCommand
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from microblog import app, db
+from projects import app, db
 
 
 app.config.from_object('config')

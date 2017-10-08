@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>projects.campen.co</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    {# Load jQuery. Would be nice to do this later..? #}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block head %}
+        {# Page specific head_content goes here. #}
+    {% endblock %}
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand">projects.campen.co</a>
+            </div>
+
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('new_project') }}">Create Project</a></li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right" style="padding-right: 10px;">
+                    <li>
+                        {# only show logout button if user is already logged in #}
+                        {% if current_user.is_authenticated %}
+{#                            <a type="button" class="btn btn-default" href="{{ url_for('logout') }}">#}
+{#                                Log out#}
+{#                            </a>#}
+                            <button class="btn btn-default navbar-btn" onclick="window.location.href='/logout'">Log out</button>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>  {# navbar-collapse #}
+        </div>  {# container-fluid#}
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="container-fluid" style="max-width: 95%; padding-top: 70px;">
+
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <div class="messages">
+                        {% for cat, message in messages %}
+                            <div class="alert alert-{{ cat if cat in ['success', 'info', 'warning', 'danger'] else 'warning' }} alert-dismissible fade in" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <br/>
+
+            {% block content %}
+                <!-- Template content renders here -->
+            {% endblock %}
+
+        </div>
+
+        {# for help getting the footer placement correc #}
+        <div class="push"></div>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>
+                <span id="copyright"></span> Richard Campen. v0.1.0
+            </p>
+            <script>
+                var year = new Date().getFullYear();
+                var timer = document.getElementById('copyright');
+                copyrightText = "&#169; " + year;
+                timer.innerHTML = copyrightText;
+            </script>
+        </div>
+    </footer>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+</body>

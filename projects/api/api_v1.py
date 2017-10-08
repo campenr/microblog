@@ -2,9 +2,9 @@ from flask import redirect, render_template, abort, request, url_for, jsonify
 from flask_login import login_user, logout_user, current_user
 from flask_login import login_required
 
-from microblog import app
-from microblog.forms import LoginForm, EditProjectForm
-from microblog.models import User, Page, Post
+from projects import app
+from projects.forms import LoginForm, EditProjectForm
+from projects.models import User, Project, Post
 
 
 
@@ -42,7 +42,7 @@ def get_pages():
     """Route for getting most recent pages."""
 
     # None if no pages exist
-    pages_data = Page.retrieve_pages()
+    pages_data = Project.retrieve_pages()
 
     # init formatted_pages_data here so that an empty list is returned both if there are no pages,
     # or if there are no non-private pages
@@ -66,7 +66,7 @@ def get_page(page_name):
     """Default route for getting the most recent post for a given page."""
 
     # None if no page with page_name exists
-    page_data = Page.retrieve_page(name=page_name)
+    page_data = Project.retrieve_page(name=page_name)
     if page_data is not None:
 
         # init latest_pubic_post here so that if no pubic posts exist, formatted_page_data['post'] is returned as None.
@@ -99,7 +99,7 @@ def get_post(page_name, post_id):
     """Route for getting a specific page, along with the most recent post."""
 
     # None if no page with page_name exists
-    page_data = Page.retrieve_page(name=page_name)
+    page_data = Project.retrieve_page(name=page_name)
 
     if page_data is not None:
         if not page_data['private']:

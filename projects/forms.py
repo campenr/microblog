@@ -1,4 +1,4 @@
-from microblog import db, app
+from projects import db, app
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, Length

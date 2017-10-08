@@ -1,19 +1,11 @@
-from flask import jsonify
 import random
 import datetime
 
-from microblog import db, app
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
+from projects import db, app
+from sqlalchemy_utils import PasswordType, force_auto_coercion
 
-from flask import url_for
 
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import desc
-
-from flask import Markup
-from CommonMark import commonmark
+force_auto_coercion()
 
 
 class User(db.Model):
@@ -30,6 +22,8 @@ class User(db.Model):
         Unique username used to login.
     password_hash
         Hash of users password.
+    api_token
+        API token used for restricted API access
 
     """
 
@@ -38,7 +32,8 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True, unique=True)
-    password_hash = db.Column(db.String(120))
+    password = db.Column(PasswordType(schemes=['pbkdf2_sha512']), nullable=False)
+    api_token = db.Column(PasswordType(schemes=['pbkdf2_sha512']))
 
     @property
     def is_authenticated(self):
@@ -55,50 +50,15 @@ class User(db.Model):
     def get_id(self):
         return str(self.id)
 
-    # TODO fix expiration.
-    # TODO change to using an actual token, not just user id number.
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-
-    @classmethod
-    def add_user(cls, username, password, api=False):
-        """Add a new user to the User table and return the id of the user, else None."""
-
-        user = User()
-
-        user.username = username
-        user.password_hash = cls.hash_password(password)
-
-        db.session.add(user)
-        db.session.commit()
-
-        return user.get_id()
-
-    @classmethod
-    def delete_user(cls, username):
+    def change_password(self, username):
         # TODO implement
         pass
-
-    @classmethod
-    def change_password(cls, username):
-        # TODO implement
-        pass
-
-    @staticmethod
-    def hash_password(password):
-        """Return hash of submitted password."""
-        return pwd_context.encrypt(password)
-
-    def verify_password(self, password):
-        """Return whether submitted password matches stored hash."""
-        return pwd_context.verify(password, self.password_hash)
 
     def __repr__(self):
         return '<User %r>' % self.username
 
 
-class Page(db.Model):
+class Project(db.Model):
     """Page table object representation.
 
     The page object is the main object with which various posts will be associated.
@@ -112,99 +72,111 @@ class Page(db.Model):
         Unique auto incrementing identifier.
     name
         Page name (unique)
-    content
-        Main content of page
+    title
+        Title of the project
+    description
+        Brief descriptive overview of the project, saved for editing
+    description_htl
+        The description but rendered as html, for display
+    created
+        When the Project was first created
+    edited
+        When the Project was last edited
+    private
+        Whether the Project is private, and therefore visible to the API
+    posts
+        Posts linked to this Project
 
     """
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, index=True)
-    title = db.Column(db.String)#, nullable=False)
-    body = db.Column(db.String)#, nullable=False)
-    created = db.Column(db.DateTime)
+    name = db.Column(db.String, index=True, nullable=False)
+    title = db.Column(db.String)
+    body = db.Column(db.String)
+    created = db.Column(db.DateTime, nullable=False)
     edited = db.Column(db.DateTime)
     private = db.Column(db.Boolean)
-    posts = db.relationship('Post', backref='page', lazy='dynamic', cascade="all, delete, delete-orphan")
+    posts = db.relationship('Post', backref='project', lazy='dynamic', cascade="all, delete, delete-orphan")
 
-    @classmethod
-    def retrieve_page(cls, name):
-        """Return a page object as a dictionary for a valid page id, else None."""
+    # @classmethod
+    # def retrieve_page(cls, name):
+    #     """Return a page object as a dictionary for a valid page id, else None."""
+    #
+    #     # Result is none if page id does not exist
+    #     result = cls.query.filter_by(name=name).first()
+    #
+    #     if result is not None:
+    #         formatted_result = vars(result)
+    #         # append list of post_id's to formatted result which are not included by default
+    #         # if no posts exist list will be empty.
+    #         formatted_result['posts'] = [post.post_id for post in result.posts]
+    #         return formatted_result
+    #     else:
+    #         return None
 
-        # Result is none if page id does not exist
-        result = cls.query.filter_by(name=name).first()
+    # @classmethod
+    # def retrieve_pages(cls):
+    #     """Return a list of page objects as dictionaries, else None."""
+    #
+    #     # TODO implement pagination
+    #     result = cls.query.order_by(desc(Project.created)).all()
+    #
+    #     # An empty list is returned from the above queries if no matching results exist.
+    #     if result:
+    #         formatted_results = [vars(rec) for rec in result]
+    #         return formatted_results
+    #     else:
+    #         return None
 
-        if result is not None:
-            formatted_result = vars(result)
-            # append list of post_id's to formatted result which are not included by default
-            # if no posts exist list will be empty.
-            formatted_result['posts'] = [post.post_id for post in result.posts]
-            return formatted_result
-        else:
-            return None
+    # @classmethod
+    # def add_page(cls, title, body, private):
+    #     """Add a new page to the database and return the link object, else None."""
+    #
+    #     page = cls()
+    #
+    #     page.name = Project.generate_page_name()
+    #     page.title = title
+    #     page.body = body
+    #     page.private = private
+    #     page.created = datetime.datetime.now()
+    #     page.edited = datetime.datetime.now()
+    #
+    #     db.session.add(page)
+    #     db.session.commit()
+    #
+    #     page_data = Project.retrieve_page(name=page.name)
+    #
+    #     return page_data
 
-    @classmethod
-    def retrieve_pages(cls):
-        """Return a list of page objects as dictionaries, else None."""
+    # @classmethod
+    # def edit_page(cls, name, title, body, private):
+    #
+    #     # Get page object from page_name
+    #     page = cls.query.filter_by(name=name).first()
+    #
+    #     page.title = title
+    #     page.body = body
+    #     page.private = private
+    #     page.edited = datetime.datetime.now()
+    #
+    #     db.session.commit()
+    #
+    #     # Retrieve new page to return
+    #     page_data = Project.retrieve_page(name=name)
+    #
+    #     return page_data
 
-        # TODO implement pagination
-        result = cls.query.order_by(desc(Page.created)).all()
-
-        # An empty list is returned from the above queries if no matching results exist.
-        if result:
-            formatted_results = [vars(rec) for rec in result]
-            return formatted_results
-        else:
-            return None
-
-    @classmethod
-    def add_page(cls, title, body, private):
-        """Add a new page to the database and return the link object, else None."""
-
-        page = cls()
-
-        page.name = Page.generate_page_name()
-        page.title = title
-        page.body = body
-        page.private = private
-        page.created = datetime.datetime.now()
-        page.edited = datetime.datetime.now()
-
-        db.session.add(page)
-        db.session.commit()
-
-        page_data = Page.retrieve_page(name=page.name)
-
-        return page_data
-
-    @classmethod
-    def edit_page(cls, name, title, body, private):
-
-        # Get page object from page_name
-        page = cls.query.filter_by(name=name).first()
-
-        page.title = title
-        page.body = body
-        page.private = private
-        page.edited = datetime.datetime.now()
-
-        db.session.commit()
-
-        # Retrieve new page to return
-        page_data = Page.retrieve_page(name=name)
-
-        return page_data
-
-    @classmethod
-    def delete_page(cls, name):
-        """Delete a page from the database and return the deleted page, else None."""
-
-        # First fetch the page so we can return this to the view, then delete the record.
-        page_data = Page.retrieve_page(name=name)
-        cls.query.filter_by(name=name).delete()
-        db.session.commit()
-
-        # will return none if the requested page never existed
-        return page_data
+    # @classmethod
+    # def delete_page(cls, name):
+    #     """Delete a page from the database and return the deleted page, else None."""
+    #
+    #     # First fetch the page so we can return this to the view, then delete the record.
+    #     page_data = Project.retrieve_page(name=name)
+    #     cls.query.filter_by(name=name).delete()
+    #     db.session.commit()
+    #
+    #     # will return none if the requested page never existed
+    #     return page_data
 
     @staticmethod
     def generate_page_name():
@@ -218,11 +190,11 @@ class Page(db.Model):
         while True:
             name = ''.join([random.SystemRandom().choice(word_dict['adjectives'] + word_dict['colors']),
                             random.SystemRandom().choice(word_dict['animals'])])
-            if Page.query.filter_by(name=name).first() is None:
+            if Project.query.filter_by(name=name).first() is None:
                 return name
 
     def __repr__(self):
-        return '<Page %r>' % self.id
+        return '<Project %r>' % self.id
 
 
 class Post(db.Model):
@@ -237,27 +209,26 @@ class Post(db.Model):
     -------
     id
         Unique auto incrementing identifier.
-    name
-        Page name (unique)
     content
-        Main content of page
+        Main content of post
 
     """
 
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer)
+    title = db.Column(db.String)
     body = db.Column(db.Text)
     created = db.Column(db.DateTime)
     edited = db.Column(db.DateTime)
     private = db.Column(db.Boolean)
-    page_id = db.Column(db.Integer, db.ForeignKey('page.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
 
     @classmethod
     def retrieve_post(cls, page_name, post_id):
         """Return a post object as a dictionary for a valid post id, else None."""
 
         # Result is none if page id does not exist
-        page = Page.query.filter_by(name=page_name).first()
+        page = Project.query.filter_by(name=page_name).first()
 
         if page is not None:
             # Result is empty list if no posts exist
@@ -294,7 +265,7 @@ class Post(db.Model):
         """Add a new post to the database and return the link object, else None."""
 
         # Get Page object from page_name
-        page = Page.query.filter_by(name=page_name).first()
+        page = Project.query.filter_by(name=page_name).first()
 
         # Create new post
         post = cls()
@@ -321,7 +292,7 @@ class Post(db.Model):
     def edit_post(cls, page_name, post_id, body, private):
 
         # Get page object
-        page = Page.query.filter_by(name=page_name).first()
+        page = Project.query.filter_by(name=page_name).first()
 
         # Get post object from page object and post_id, and update
         post = cls.query.filter_by(page_id=page.id, post_id=post_id).first()
@@ -345,7 +316,7 @@ class Post(db.Model):
         post_data = None
 
         # First fetch the page and post so we can return this to the view, then delete the record.
-        page_data = Page.retrieve_page(name=page_name)
+        page_data = Project.retrieve_page(name=page_name)
         if page_data is not None:
 
             # First fetch the post so we can return this to the view, then delete the record.
@@ -358,8 +329,3 @@ class Post(db.Model):
 
     def __repr__(self):
         return '<Post %r>' % self.id
-
-
-def format_markdown(text):
-
-    return Markup(commonmark(text))
