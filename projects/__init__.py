@@ -11,7 +11,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-from projects import views, models, forms, helpers
-from projects.api import api_v1
+from projects import views, models, forms, helpers, api
 
 app.jinja_env.filters['markdown_filter'] = helpers.format_markdown

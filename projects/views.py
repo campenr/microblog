@@ -23,13 +23,12 @@ Routes for web interface
 
     - index: main page with all projects listed
     - login/logout: routes for logging in and out
-    - page/<page_name>: each topic gets a single page, where names's are random strings (see below)
-    - page/<page_name>/<post_id>: each page gets unlimited? posts
+    - project/<project_name>: each project gets a single page, where names's are random strings (see below)
+    - project/<project_name>/post/<post_id>: each project gets unlimited posts
 
-    In this structure, the page own's the posts associated with it. A page may have only a single post
-    in which case it appears like a normal single blogpost. A page may have multiple posts however which
-    is useful in the case of a page being about a project, and posts documenting ongoing progress over
-    time for that project.
+    In this structure, the project own's the posts associated with it. A project may have only a single post
+    in which case it appears like a normal single blog post. A project may have multiple posts however which
+    is may be useful in some circumstances, .
 
 """
 
@@ -184,11 +183,16 @@ def new_post(project_name):
 
     if form.validate_on_submit() and request.method == 'POST':
         try:
+
+            num_posts = len(post for post in project.posts)
+
             post = Post(
+                post_id=num_posts + 1,  # need a better way of doing this as it is prone to break
                 title=project.title,  # posts get their title from the project
                 body=form.body.data,
                 private=form.private.data,
-                project = project
+                project=project,
+                created=datetime.datetime.now()
             )
             db.session.add(post)
             db.session.commit()
@@ -245,7 +249,7 @@ def edit_project(project_name):
     return render_template('editor.html', form=form, type_='project', new=False, data=project)
 
 
-@app.route('/project/<project_name>/post/<int:post_id>/edit', methods=['GET'])
+@app.route('/project/<project_name>/post/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_post(project_name, post_id):
     """Route for editing an existing post."""
@@ -266,6 +270,7 @@ def edit_post(project_name, post_id):
         try:
             post.body = form.body.data
             post.private = form.private.data
+            post.edited = datetime.datetime.now()
 
             db.session.commit()
 
