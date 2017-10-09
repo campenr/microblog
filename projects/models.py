@@ -34,6 +34,8 @@ class User(db.Model):
     password = db.Column(PasswordType(schemes=['pbkdf2_sha512']), nullable=False)
     api_token = db.Column(PasswordType(schemes=['pbkdf2_sha512']))
 
+    projects = db.relationship('Project', backref='user', lazy='dynamic', cascade="all, delete, delete-orphan")
+
     @property
     def is_authenticated(self):
         return True
@@ -88,13 +90,16 @@ class Project(db.Model):
 
     """
 
+    __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, index=True, nullable=False)
     title = db.Column(db.String)
     body = db.Column(db.String)
     created = db.Column(db.DateTime, nullable=False)
     edited = db.Column(db.DateTime)
-    private = db.Column(db.Boolean)
+    private = db.Column(db.Boolean, nullable=False, default=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
     posts = db.relationship('Post', backref='project', lazy='dynamic', cascade="all, delete, delete-orphan")
 
     @staticmethod
@@ -135,14 +140,16 @@ class Post(db.Model):
 
     """
 
+    __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer)
+    post_id = db.Column(db.Integer, nullable=False)
     title = db.Column(db.String)
     body = db.Column(db.Text)
-    created = db.Column(db.DateTime)
+    created = db.Column(db.DateTime, nullable=False)
     edited = db.Column(db.DateTime)
-    private = db.Column(db.Boolean)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    private = db.Column(db.Boolean, nullable=False, default=True)
+
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
 
     def __repr__(self):
         return '<Project %r>.<Post %r>' % (self.project_id, self.id)
