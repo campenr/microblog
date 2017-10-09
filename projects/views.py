@@ -89,7 +89,7 @@ def logout():
 def index():
     """Displays page summaries sorted by date created in descending order."""
 
-    projects = Project.query.order_by(desc(Project.created)).all()
+    projects = Project.query.filter_by(user_id=current_user.id).order_by(desc(Project.created)).all()
     return render_template('index.html', projects=projects)
 
 
@@ -99,7 +99,7 @@ def view_project(project_name):
     """Default route for viewing a project and its most recent post if it exists."""
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
     posts = [post for post in project.posts]
 
     if len(posts) > 1:
@@ -120,8 +120,8 @@ def view_post(project_name, post_id):
     """Route for viewing a specific post belonging to a page."""
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
-    post = project.posts.filter_by(id=post_id).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
+    post = project.posts.filter_by(post_id=post_id).first()
 
     if project is None or post is None:
         # Abort if page_data or post_data are None; occurs when the page_name does not exist, or when the
@@ -151,8 +151,9 @@ def new_project():
                 name=Project.generate_page_name(),
                 title=form.title.data,
                 body=form.body.data,
+                created=datetime.datetime.now(),
                 private=form.private.data,
-                created=datetime.datetime.now()
+                user=current_user
             )
             db.session.add(project)
             db.session.commit()
@@ -167,13 +168,14 @@ def new_project():
     # Render without any page content to auto fill editor with as we're creating a new project
     return render_template('editor.html', form=form, type_='project', new=True, data=None)
 
+
 @app.route('/project/<project_name>/post/new', methods=['GET', 'POST'])
 @login_required
 def new_post(project_name):
     """Route for creating a new post."""
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
 
     if project is None:
         # if page_data is None then the page doesn't exist in the database so we abort
@@ -184,15 +186,15 @@ def new_post(project_name):
     if form.validate_on_submit() and request.method == 'POST':
         try:
 
-            num_posts = len(post for post in project.posts)
+            num_posts = len([post for post in project.posts])
 
             post = Post(
                 post_id=num_posts + 1,  # need a better way of doing this as it is prone to break
                 title=project.title,  # posts get their title from the project
                 body=form.body.data,
+                created=datetime.datetime.now(),
                 private=form.private.data,
-                project=project,
-                created=datetime.datetime.now()
+                project=project
             )
             db.session.add(post)
             db.session.commit()
@@ -221,7 +223,7 @@ def edit_project(project_name):
     """Route for editing an existing project."""
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
 
     if project is None:
         # if project is None then the project doesn't exist in the database so we abort
@@ -234,8 +236,8 @@ def edit_project(project_name):
         try:
             project.title = form.title.data
             project.body = form.body.data
-            project.private = form.private.data
             project.edited = datetime.datetime.now()
+            project.private = form.private.data
 
             db.session.commit()
 
@@ -255,8 +257,8 @@ def edit_post(project_name, post_id):
     """Route for editing an existing post."""
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
-    post = project.posts.filter_by(id=post_id).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
+    post = project.posts.filter_by(post_id=post_id).first()
 
     if project is None or post is None:
         # Abort if project or post_data are None; occurs when the page_name does not exist, or when the
@@ -269,8 +271,8 @@ def edit_post(project_name, post_id):
     if form.validate_on_submit() and request.method == 'POST':
         try:
             post.body = form.body.data
-            post.private = form.private.data
             post.edited = datetime.datetime.now()
+            post.private = form.private.data
 
             db.session.commit()
 
@@ -299,7 +301,7 @@ def delete_page(project_name):
     """
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
 
     if project is None:
         # Abort if project or are None; occurs when the page_name does not exist, or when the
@@ -310,7 +312,7 @@ def delete_page(project_name):
     for post in project.posts:
         Post.query.filter_by(id=post.id).delete()
 
-    Project.query.filter_by(name=project_name).delete()
+    Project.query.filter_by(user_id=current_user.id, name=project_name).delete()
 
     db.session.commit()
 

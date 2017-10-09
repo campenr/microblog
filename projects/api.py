@@ -1,4 +1,5 @@
-from flask import abort, jsonify, request
+from flask import abort, jsonify, request, url_for
+from flask_login import current_user
 from sqlalchemy import desc
 
 from projects import app
@@ -39,7 +40,7 @@ def get_projects():
     """Returns all projects."""
 
     # None if no pages exist
-    projects = Project.query.order_by(desc(Project.created)).all()
+    projects = Project.query.filter_by(user_id=current_user.id).order_by(desc(Project.created)).all()
 
     # init response data container
     formatted_projects_data = []
@@ -71,7 +72,7 @@ def get_project():
         abort(400)
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
     if project is not None:
         if project.private:
             # treat private projects as not existing
@@ -107,7 +108,7 @@ def get_post():
         abort(400)
 
     # None if no page with page_name exists
-    project = Project.query.filter_by(name=project_name).first()
+    project = Project.query.filter_by(user_id=current_user.id, name=project_name).first()
     if project is not None:
         if project.private:
             # treat private projects as not existing
@@ -139,7 +140,10 @@ def get_post():
 def format_project_data(project_data):
     """Filter our fields from project_data that aren't in PROJECT_KEY_FILTER."""
 
-    return {key: value for key, value in vars(project_data).items() if key in PROJECT_KEY_FILTER}
+    formatted_data = {key: value for key, value in vars(project_data).items() if key in PROJECT_KEY_FILTER}
+    formatted_data['uri'] = url_for('get_project', name=project_data.name)
+
+    return formatted_data
 
 
 def format_post_data(post_data):
